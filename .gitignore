@@ -163,3 +163,10 @@ cython_debug/
 .idea/
 
 .DS_Store
+
+# Data
+pix2pix_data/A
+pix2pix_data/B
+pix2pix_data/AB
+checkpoints/pixel/*.pth
+checkpoints/pixel/web

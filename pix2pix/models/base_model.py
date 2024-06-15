@@ -3,6 +3,7 @@ import torch
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
+from util import platform_util
 
 
 class BaseModel(ABC):
@@ -32,7 +33,7 @@ class BaseModel(ABC):
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
+        self.device = platform_util.device(self.gpu_ids)  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
@@ -152,10 +153,9 @@ class BaseModel(ABC):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
-
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                if len(self.gpu_ids) > 0:
                     torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
+                    platform_util.model_to_gpu(net, self.gpu_ids)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 

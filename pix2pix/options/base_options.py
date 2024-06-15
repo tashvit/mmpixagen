@@ -1,6 +1,6 @@
 import argparse
 import os
-from util import util
+from util import util, platform_util
 import torch
 import models
 import data
@@ -132,8 +132,6 @@ class BaseOptions():
             id = int(str_id)
             if id >= 0:
                 opt.gpu_ids.append(id)
-        if len(opt.gpu_ids) > 0:
-            torch.cuda.set_device(opt.gpu_ids[0])
-
+        platform_util.setup_device(opt.gpu_ids)
         self.opt = opt
         return self.opt

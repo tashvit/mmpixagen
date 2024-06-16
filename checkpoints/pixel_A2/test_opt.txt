@@ -30,7 +30,7 @@
                  num_test: 50                            
               num_threads: 4                             
                 output_nc: 3                             
-                    phase: train                         	[default: test]
+                    phase: test                          
                preprocess: resize_and_crop               
               results_dir: ./results/                    
            serial_batches: False                         

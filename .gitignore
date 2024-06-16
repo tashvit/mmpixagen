@@ -170,3 +170,5 @@ pix2pix_data/B
 pix2pix_data/AB
 checkpoints/pixel/*.pth
 checkpoints/pixel/web
+checkpoints/pixel_A2/*.pth
+checkpoints/pixel_A2/web

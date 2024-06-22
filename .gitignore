@@ -172,3 +172,4 @@ checkpoints/pixel/*.pth
 checkpoints/pixel/web
 checkpoints/pixel_A2/*.pth
 checkpoints/pixel_A2/web
+input/*.png

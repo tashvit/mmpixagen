@@ -173,3 +173,7 @@ checkpoints/pixel/web
 checkpoints/pixel_A2/*.pth
 checkpoints/pixel_A2/web
 input/*.png
+model_b_data/**/*.png
+model_c_data/**/*.png
+model_d_data/**/*.png
+input_bcd/**/*.png

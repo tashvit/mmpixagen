@@ -184,3 +184,4 @@ input_bcd/**/*.png
 checkpoints/pixel_A3/*.pth
 checkpoints/pixel_A3/web
 /input_a3/**/*.png
+sprite_generation/frames/**/*.png

@@ -166,6 +166,7 @@ cython_debug/
 
 # Models
 checkpoints/**/*.pth
+checkpoints/**/*.png
 checkpoints/pixel_A1/web
 checkpoints/pixel_A2/web
 checkpoints/pixel_A3/web

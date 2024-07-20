@@ -183,6 +183,4 @@ input_bcd/**/*.png
 # --- A3 ---
 checkpoints/pixel_A3/*.pth
 checkpoints/pixel_A3/web
-/input_a3/transfer_learning/
-/input_a3/characters/
-/input_a3/
+/input_a3/**/*.png

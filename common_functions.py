@@ -5,8 +5,6 @@ from resizeimage import resizeimage
 import os
 
 
-# https://stackoverflow.com/a/74205492
-
 def create_sketch(cv_img, levels=3, magenta_bg=True):
     image = cv_img
 
@@ -48,12 +46,16 @@ def write_image(image, filename):
 
 
 def pil_to_opencv(pil_img):
+    # Image conversion functions are taken from
+    # https://stackoverflow.com/a/74205492
     cv2_img = np.array(pil_img)
     cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_RGB2BGR)
     return cv2_img
 
 
 def opencv_to_pil(cv2_img):
+    # Image conversion functions are taken from
+    # https://stackoverflow.com/a/74205492
     cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(cv2_img)
     return pil_img

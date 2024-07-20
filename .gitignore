@@ -177,3 +177,6 @@ model_b_data/**/*.png
 model_c_data/**/*.png
 model_d_data/**/*.png
 input_bcd/**/*.png
+/checkpoints/pixel_B1/
+/checkpoints/pixel_C1/
+/checkpoints/pixel_D1/

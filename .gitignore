@@ -164,24 +164,15 @@ cython_debug/
 
 .DS_Store
 
-# Data
-pix2pix_data/A
-pix2pix_data/B
-pix2pix_data/AB
-checkpoints/pixel/*.pth
-checkpoints/pixel/web
-checkpoints/pixel_A2/*.pth
+# Models
+checkpoints/**/*.pth
+checkpoints/pixel_A1/web
 checkpoints/pixel_A2/web
-input/*.png
-model_b_data/**/*.png
-model_c_data/**/*.png
-model_d_data/**/*.png
-input_bcd/**/*.png
-/checkpoints/pixel_B1/
-/checkpoints/pixel_C1/
-/checkpoints/pixel_D1/
-# --- A3 ---
-checkpoints/pixel_A3/*.pth
 checkpoints/pixel_A3/web
-/input_a3/**/*.png
-sprite_generation/frames/**/*.png
+checkpoints/pixel_B1/web
+checkpoints/pixel_C1/web
+checkpoints/pixel_D1/web
+checkpoints/pixel_E1/web
+
+# Datasets
+datasets/**/*.png

@@ -3,7 +3,7 @@
                batch_size: 1                             
           checkpoints_dir: ./checkpoints                 
                 crop_size: 64                            	[default: 256]
-                 dataroot: ./input_a3/pix2pix_combined   	[default: None]
+                 dataroot: /Users/tashvit/Documents/GitHub/mmpixagen/datasets/model_a3_data/pix2pix_combined/	[default: None]
              dataset_mode: aligned                       
                 direction: AtoB                          
           display_winsize: 64                            	[default: 256]

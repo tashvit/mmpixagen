@@ -3,7 +3,7 @@
                batch_size: 1                             
           checkpoints_dir: ./checkpoints                 
                 crop_size: 256                           
-                 dataroot: ./pix2pix_data/AB             	[default: None]
+                 dataroot: /Users/tashvit/Documents/GitHub/mmpixagen/datasets/model_a_data/combined/	[default: None]
              dataset_mode: aligned                       
                 direction: BtoA                          	[default: AtoB]
           display_winsize: 256                           
@@ -19,7 +19,7 @@
          max_dataset_size: inf                           
                     model: pix2pix                       	[default: test]
                n_layers_D: 3                             
-                     name: pixel                         	[default: experiment_name]
+                     name: pixel_A1                      	[default: experiment_name]
                       ndf: 64                            
                      netD: basic                         
                      netG: unet_256                      
@@ -30,7 +30,7 @@
                  num_test: 50                            
               num_threads: 4                             
                 output_nc: 3                             
-                    phase: train                         	[default: test]
+                    phase: test                          
                preprocess: resize_and_crop               
               results_dir: ./results/                    
            serial_batches: False                         

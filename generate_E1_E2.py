@@ -14,6 +14,7 @@ import os
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+import common_functions as core
 
 FRAME_COUNT = 8
 RIGHT_WALK_START = 144
@@ -62,10 +63,10 @@ def gen_char(body, bottom, top, hair):
     image_width, image_height = img.size
     n_width = image_width // width
     n_height = image_height // height
-    path = 'frames/'
+    path = core.get_path(core.E1.raw_data_dir)
     if not os.path.exists(path):
         os.makedirs(path)
-    os.makedirs(path + "/walk/", exist_ok=True)
+    os.makedirs(os.path.join(path, "walk"), exist_ok=True)
 
     for j in range(n_height):
         for i in range(n_width):
@@ -103,7 +104,8 @@ def gen_char(body, bottom, top, hair):
 def crop_and_save_image(rect_to_crop, image_identifier, image_object, frame, file_path, pose):
     a = image_object.crop(rect_to_crop)
     a.convert('RGB')
-    a.save(f"{file_path}walk/{image_identifier}_{pose}_{frame}.png")
+    target_image = os.path.join(file_path, "walk", f"{image_identifier}_{pose}_{frame}.png")
+    a.save(target_image)
 
 
 def main():
@@ -123,5 +125,5 @@ def main():
 
 
 if __name__ == '__main__':
-    os.chdir(os.path.join(os.path.dirname(__file__), 'sprite_generation'))
+    os.chdir(core.get_path("thirdparty", "sprite_generation"))
     main()

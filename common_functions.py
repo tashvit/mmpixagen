@@ -1,8 +1,110 @@
+# -- Common/core functions for notebooks and scripts --
 from PIL import Image
 import cv2
 import numpy as np
 from resizeimage import resizeimage
 import os
+from typing import NamedTuple
+
+
+class Spec(NamedTuple):
+    """
+    Model Spec has been created to ensure
+     that the file-paths for data and model metadata is available for easy access
+    """
+    name: str
+    raw_data_dir: str
+    prepared_data_dir: str
+    direction: str
+    model_type: str
+    dataset_path_prefix: str = ""
+    temp_directory: str = ""
+
+
+# For different iterations of models such as A1, A2, A3, B1, C1, D1, etc.
+#  spec is created
+
+A1 = Spec(
+    name="pixel_A1",
+    raw_data_dir="datasets/unprepared_data/input_a1_a2",
+    prepared_data_dir="datasets/model_a_data",
+    direction="BtoA",
+    model_type="pix2pix",
+    temp_directory="datasets/unprepared_data/pairs",
+)
+A2 = Spec(
+    name="pixel_A2",
+    raw_data_dir=A1.raw_data_dir,
+    prepared_data_dir=A1.prepared_data_dir,
+    direction=A1.direction,
+    model_type="pix2pix"
+)
+A3_BASE = Spec(
+    name="pixel_A3",
+    raw_data_dir="datasets/unprepared_data/input_a3/transfer_learning",
+    prepared_data_dir="datasets/model_a3_data",
+    direction="AtoB",
+    model_type="pix2pix",
+    dataset_path_prefix="tl_"
+)
+A3 = Spec(
+    name="pixel_A3",
+    raw_data_dir="datasets/unprepared_data/input_a3/characters",
+    prepared_data_dir="datasets/model_a3_data",
+    direction="AtoB",
+    model_type="pix2pix",
+    dataset_path_prefix="pix2pix_"
+)
+B1 = Spec(
+    name="pixel_B1",
+    raw_data_dir="datasets/unprepared_data/input_bcd",
+    prepared_data_dir="datasets/model_b_data",
+    direction="AtoB",
+    model_type="pix2pix"
+)
+C1 = Spec(
+    name="pixel_C1",
+    raw_data_dir=B1.raw_data_dir,
+    prepared_data_dir="datasets/model_c_data",
+    direction="AtoB",
+    model_type="pix2pix"
+)
+D1 = Spec(
+    name="pixel_D1",
+    raw_data_dir=B1.raw_data_dir,
+    prepared_data_dir="datasets/model_d_data",
+    direction="AtoB",
+    model_type="pix2pix"
+)
+# Note: E1 raw data is generated with generate_E1_E2.py
+E1 = Spec(
+    name="pixel_E1",
+    raw_data_dir="datasets/unprepared_data/input_e",
+    prepared_data_dir="datasets/model_e_data",
+    direction="AtoB",
+    model_type="pix2pix"
+)
+
+ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
+def create_combined_images(arguments: str):
+    script = get_path("thirdparty/pix2pix/datasets/combine_A_and_B.py")
+    command_line = f"python {script} {arguments}"
+    print("----------------------------------------------------------")
+    print(command_line)
+    os.system(command_line)
+
+
+def get_path(*paths) -> str:
+    # based on
+    # reference: https://stackoverflow.com/a/59131433
+    target = str(os.path.join(ROOT_PATH, *paths))
+    if os.path.isdir(target):
+        if target[-1] == "/" or target[-1] == "\\":
+            return target
+        return target + os.path.sep
+    return target
 
 
 def create_sketch(cv_img, levels=3, magenta_bg=True):

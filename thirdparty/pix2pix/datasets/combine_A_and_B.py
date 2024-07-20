@@ -24,7 +24,11 @@ args = parser.parse_args()
 for arg in vars(args):
     print('[%s] = ' % arg, getattr(args, arg))
 
-splits = os.listdir(args.fold_A)
+# Only consider subdirectories of fold_A directory
+splits = []
+for sp in os.listdir(args.fold_A):
+    if os.path.isdir(os.path.join(args.fold_A, sp)):
+        splits.append(sp)
 
 if not args.no_multiprocessing:
     pool=Pool()

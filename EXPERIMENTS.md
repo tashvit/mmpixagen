@@ -32,7 +32,7 @@ python pix2pix/train.py --dataroot ./datasets/model_a_data/combined --name pixel
 * Epochs are customized
 * Continue training from mixed data.
 
-#### Step 1 - Train on subset of AFD + Pokemon
+#### Step 1 - Train on subset of Anime Face data + Pokemon data
 
 ```bash
 python pix2pix/train.py --dataroot ./datasets/model_a3_data/tl_combined --name pixel_A3 --model pix2pix --direction AtoB --netG unet_64 --netD pixel --load_size 64 --crop_size 64 --display_winsize 64 --n_epochs 40 --n_epochs_decay 40

@@ -109,17 +109,16 @@ def get_path(*paths) -> str:
 
 def create_sketch(cv_img, levels=3, magenta_bg=True):
     image = cv_img
-
     # Create a basic sketch
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     invert_image = cv2.bitwise_not(gray_image)
     blur_image = cv2.GaussianBlur(invert_image, (5, 5), 0)
     invert_blur = cv2.bitwise_not(blur_image)
     sketch = cv2.divide(gray_image, invert_blur, scale=256.0)
-
     # perform edge detection on the sketch
     b1 = cv2.GaussianBlur(sketch, (5, 5), 0)
     b2 = b1
+
     for _ in range(0, levels - 1):
         b2 = cv2.GaussianBlur(b2, (5, 5), 0)
     edge = cv2.Canny(b2, 50, 100)

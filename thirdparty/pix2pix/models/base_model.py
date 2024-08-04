@@ -3,7 +3,7 @@ import torch
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
-from util import platform_util
+from ..util import platform_util
 
 
 class BaseModel(ABC):

@@ -2,10 +2,10 @@ import argparse
 import os
 import sys
 
-from util import util, platform_util
+from ..util import util, platform_util
 import torch
-import models
-import data
+from .. import models
+from .. import data
 
 
 class BaseOptions():

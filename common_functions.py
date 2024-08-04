@@ -147,6 +147,11 @@ def write_image(image, filename):
 
 
 def pil_to_opencv(pil_img):
+    """
+    Converts PIL image to OpenCV image
+    :param pil_img: pillow image
+    :return: OpenCV image
+    """
     # Image conversion functions are taken from
     # https://stackoverflow.com/a/74205492
     cv2_img = np.array(pil_img)
@@ -155,6 +160,11 @@ def pil_to_opencv(pil_img):
 
 
 def opencv_to_pil(cv2_img):
+    """
+    Converts OpenCV image to PIL image
+    :param cv2_img: OpenCV image
+    :return: pillow image
+    """
     # Image conversion functions are taken from
     # https://stackoverflow.com/a/74205492
     cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
@@ -163,6 +173,11 @@ def opencv_to_pil(cv2_img):
 
 
 def load_with_magenta_background(input_img_path):
+    """
+    Load image with magenta background
+    :param input_img_path: input image path
+    :return: image with magenta background
+    """
     # Convert input image to RGBA
     img = Image.open(input_img_path).convert("RGBA")
     # New image with a magenta background
@@ -175,18 +190,34 @@ def load_with_magenta_background(input_img_path):
 
 
 def load_64x64_with_magenta_bg(image_path):
+    """
+    Load and resize image with magenta background to 64x64
+    :param image_path: image path
+    :return: resized image with magenta background
+    """
     image = load_with_magenta_background(image_path)
     res = resizeimage.resize_contain(image, [64, 64], bg_color=(255, 0, 255, 255))
     return res
 
 
 def to_64x64_magenta(image_path, output_path):
+    """
+    Load and save 64x64 image with magenta background to a given file path
+    :param image_path: image path
+    :param output_path: location to write magenta background image
+    """
     res = load_64x64_with_magenta_bg(image_path)
-    # Save image to output directory
+    # Save image to output path
     res.save(output_path)
 
 
 def turn_magenta(input_img_path, output_img_path):
+    """
+    Load and save image with magenta background to a given file path
+    :param input_img_path: input image path
+    :param output_img_path: location to write magenta background image
+    :return:
+    """
     final_img = load_with_magenta_background(input_img_path)
     # Save image to output directory
     final_img.save(output_img_path)

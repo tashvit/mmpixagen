@@ -1,6 +1,8 @@
-# This code is based on random_character.py script
+# Code file to generate sprite sheet images for training models E1 and E2
+
+# This code is adapted from random_character.py script
 #  from https://github.com/YingzhenLi/Sprites
-#  all content of 'Sprites' repo is copied to 'sprite_generation' for use in mmpixagen
+#  all content of 'Sprites' repo has been copied to 'thirdparty/sprite_generation' for use in mmpixagen
 #
 #  Modifications
 #   - python 3 support
@@ -16,6 +18,7 @@ from PIL import Image
 from tqdm import tqdm
 import common_functions as core
 
+# Constants used for frame creation
 FRAME_COUNT = 8
 RIGHT_WALK_START = 144
 FRONT_WALK_END = 139

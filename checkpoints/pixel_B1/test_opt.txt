@@ -3,7 +3,7 @@
                batch_size: 1                             
           checkpoints_dir: ./checkpoints                 
                 crop_size: 64                            	[default: 256]
-                 dataroot: /Users/tashvit/Documents/GitHub/mmpixagen/datasets/model_b_data/combined/	[default: None]
+                 dataroot: datasets/model_b_data         	[default: None]
              dataset_mode: aligned                       
                 direction: AtoB                          
           display_winsize: 64                            	[default: 256]

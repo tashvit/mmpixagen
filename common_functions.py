@@ -1,10 +1,17 @@
 # -- Common/core functions for notebooks and scripts --
-from PIL import Image
-import cv2
-import numpy as np
-from resizeimage import resizeimage
 import os
 from typing import NamedTuple
+
+import cv2
+import numpy as np
+import torch
+from PIL import Image
+from resizeimage import resizeimage
+
+from thirdparty.pix2pix.data.base_dataset import get_params, get_transform
+from thirdparty.pix2pix.models import create_model
+from thirdparty.pix2pix.options.test_options import TestOptions
+from thirdparty.pix2pix.util import util
 
 
 class Spec(NamedTuple):
@@ -86,6 +93,79 @@ E1 = Spec(
 )
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
+class Model:
+    def __init__(self, spec: Spec, model_type="pix2pix"):
+        self._spec = spec
+        self._model_type = model_type
+        self._model = None
+        if self._model_type == "pix2pix":
+            self._model = self._load_pix2pix()
+
+    def _load_pix2pix(self):
+        # This section is based on the evaluation notebooks such as eval_A2_A3, eval_B1_C1_D1
+        args = ["--dataroot", self._spec.prepared_data_dir,
+                "--name", self._spec.name, "--model", self._spec.model_type,
+                "--direction", self._spec.direction, "--phase", "test", "--netG",
+                "unet_64", "--netD", "pixel", "--load_size", "64",
+                "--crop_size", "64", "--display_winsize", "64"]
+
+        # Parsed test options
+        self.opt = TestOptions().parse(args)
+        self.opt.num_threads = 0
+        self.opt.batch_size = 1
+        self.opt.serial_batches = True
+        self.opt.no_flip = True
+        self.opt.display_id = -1
+        model = create_model(self.opt)
+        model.setup(self.opt)
+        return model
+
+    def evaluate(self, image_path=None, image=None, output_image_path=None) -> Image:
+        """
+        Evaluate model on given input
+        :param image_path: Image path to load image from (either this or image need to be provided)
+        :param image: 64x64 magenta background image (Pillow) to evaluate
+            (either this or image_path need to be provided)
+        :param output_image_path: Path to save output image (if None, will not save to this location)
+        :return: Image (Pillow) evaluated on given input
+        """
+        if not self._model_type == "pix2pix":
+            return
+        if image is None and image_path is None:
+            raise ValueError("Either image or image path must be specified")
+        if image_path:
+            input_image = load_64x64_with_magenta_bg(image_path).convert('RGB')
+        else:
+            input_image = image
+        return self._eval_pix2pix(input_image, output_image_path)
+
+    def _eval_pix2pix(self, input_image, output_image_path):
+        tensor = self._im_to_tensor(input_image)
+        self._model.set_input({"A": tensor, "B": tensor, "A_paths": "path", "B_paths": "path"})
+        self._model.test()
+        visuals = self._model.get_current_visuals()
+        generated = visuals['fake_B']
+        im = util.tensor2im(generated)
+        im = Image.fromarray(im)
+        if output_image_path:
+            im.save(output_image_path)
+            im = im.open(output_image_path)
+        else:
+            im.save("temp.png")
+            im = Image.open("temp.png")
+            os.unlink("temp.png")
+        return im
+
+    def _im_to_tensor(self, im):
+        transform_params = get_params(self.opt, im.size)
+        transformer = get_transform(self.opt, transform_params, grayscale=False)
+        return torch.unsqueeze(transformer(im), 0)
+
+
+def load_model(spec: Spec) -> Model:
+    return Model(spec, model_type="pix2pix")
 
 
 def create_combined_images(arguments: str):
@@ -170,6 +250,67 @@ def opencv_to_pil(cv2_img):
     cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(cv2_img)
     return pil_img
+
+
+def background_to_alpha(cv_image):
+    # Taken from https://stackoverflow.com/a/63003020
+    # load image
+    img = cv_image
+
+    # convert to graky
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.bitwise_not(gray)
+    # threshold input image as mask
+    mask = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)[1]
+    #
+    # # negate mask
+    mask = 255 - mask
+
+    # apply morphology to remove isolated extraneous noise
+    # use border constant of black since foreground touches the edges
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    # anti-alias the mask -- blur then stretch
+    # blur alpha channel
+    mask = cv2.GaussianBlur(mask, (0, 0), sigmaX=2, sigmaY=2, borderType=cv2.BORDER_DEFAULT)
+
+    # linear stretch so that 127.5 goes to 0, but 255 stays 255
+    mask = (2 * (mask.astype(np.float32)) - 255.0).clip(0, 255).astype(np.uint8)
+
+    # put mask into alpha channel
+    result = img.copy()
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
+    result[:, :, 3] = mask
+    return result
+
+
+def images_to_sprite_sheet(images, max_horiz=8):
+    # From https://stackoverflow.com/a/46877433
+    n_images = len(images)
+    n_horiz = min(n_images, max_horiz)
+    h_sizes, v_sizes = [0] * n_horiz, [0] * (n_images // n_horiz)
+    for i, im in enumerate(images):
+        h, v = i % n_horiz, i // n_horiz
+        h_sizes[h] = max(h_sizes[h], im.size[0])
+        v_sizes[v] = max(v_sizes[v], im.size[1])
+    h_sizes, v_sizes = np.cumsum([0] + h_sizes), np.cumsum([0] + v_sizes)
+    im_grid = Image.new('RGB', (h_sizes[-1], v_sizes[-1]), color='white')  # noqa
+    for i, im in enumerate(images):
+        im_grid.paste(im, (h_sizes[i % n_horiz], v_sizes[i // n_horiz]))
+    return im_grid
+
+
+def turn_pil_image_to_magenta_bg(pil_image):
+    cv_img = pil_to_opencv(pil_image)
+    cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGRA2RGBA)
+    alpha_bg = background_to_alpha(cv_img)
+    img = Image.fromarray(alpha_bg, mode='RGBA')
+    magenta_bg = Image.new("RGBA", img.size, (255, 0, 255, 255))
+    img_with_magenta_bg = Image.alpha_composite(magenta_bg, img)
+    final_img = img_with_magenta_bg.convert("RGB")
+    return final_img
 
 
 def load_with_magenta_background(input_img_path):

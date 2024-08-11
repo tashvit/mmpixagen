@@ -91,6 +91,13 @@ E1 = Spec(
     direction="AtoB",
     model_type="pix2pix"
 )
+E2 = Spec(
+    name="sprite_E2",
+    raw_data_dir=E1.raw_data_dir,
+    prepared_data_dir="datasets/model_e2_data",
+    direction="",
+    model_type="fomm"
+)
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 

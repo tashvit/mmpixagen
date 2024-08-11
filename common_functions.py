@@ -78,7 +78,7 @@ D1 = Spec(
 )
 # Note: E1 raw data is generated with generate_E1_E2.py
 E1 = Spec(
-    name="pixel_E1",
+    name="sprite_E1",
     raw_data_dir="datasets/unprepared_data/input_e/walk",
     prepared_data_dir="datasets/model_e_data",
     direction="AtoB",

@@ -1,6 +1,8 @@
 from torch import nn
 import torch
 import torch.nn.functional as F
+
+from modules import platform_util
 from modules.util import AntiAliasInterpolation2d, make_coordinate_grid
 from torchvision import models
 import numpy as np
@@ -138,15 +140,15 @@ class GeneratorFullModel(torch.nn.Module):
         self.scales = train_params['scales']
         self.disc_scales = self.discriminator.scales
         self.pyramid = ImagePyramide(self.scales, generator.num_channels)
-        if torch.cuda.is_available():
-            self.pyramid = self.pyramid.cuda()
+        if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+            self.pyramid = self.pyramid.to(platform_util.device([0]))
 
         self.loss_weights = train_params['loss_weights']
 
         if sum(self.loss_weights['perceptual']) != 0:
             self.vgg = Vgg19()
-            if torch.cuda.is_available():
-                self.vgg = self.vgg.cuda()
+            if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+                self.vgg = self.vgg.to(platform_util.device([0]))
 
     def forward(self, x):
         kp_source = self.kp_extractor(x['source'])
@@ -235,8 +237,8 @@ class DiscriminatorFullModel(torch.nn.Module):
         self.train_params = train_params
         self.scales = self.discriminator.scales
         self.pyramid = ImagePyramide(self.scales, generator.num_channels)
-        if torch.cuda.is_available():
-            self.pyramid = self.pyramid.cuda()
+        if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+            self.pyramid = self.pyramid.to(platform_util.device([0]))
 
         self.loss_weights = train_params['loss_weights']
 

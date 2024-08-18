@@ -177,3 +177,4 @@ checkpoints/pixel_E1/web
 
 # Datasets
 datasets/**/*.png
+/thirdparty/fomm/log/tinyhero-*

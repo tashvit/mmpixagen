@@ -9,6 +9,8 @@ from skimage.draw import disk
 import matplotlib.pyplot as plt
 import collections
 
+from modules import platform_util
+
 
 class Logger:
     def __init__(self, log_dir, checkpoint_freq=100, visualizer_params=None, zfill_num=8, log_file_name='log.txt'):
@@ -50,7 +52,8 @@ class Logger:
     @staticmethod
     def load_cpk(checkpoint_path, generator=None, discriminator=None, kp_detector=None,
                  optimizer_generator=None, optimizer_discriminator=None, optimizer_kp_detector=None):
-        if torch.cuda.is_available():
+        if (platform_util.PLATFORM == platform_util.GpuPlatform.CUDA
+                or platform_util.PLATFORM == platform_util.GpuPlatform.MPS):
             map_location = None
         else:
             map_location = 'cpu'
@@ -111,7 +114,7 @@ class Visualizer:
         kp_array = spatial_size * (kp_array + 1) / 2
         num_kp = kp_array.shape[0]
         for kp_ind, kp in enumerate(kp_array):
-            rr, cc = disk(kp[1], kp[0], self.kp_size, shape=image.shape[:2])
+            rr, cc = disk((kp[1], kp[0]), self.kp_size, shape=image.shape[:2])
             image[rr, cc] = np.array(self.colormap(kp_ind / num_kp))[:3]
         return image
 

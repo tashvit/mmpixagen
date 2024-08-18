@@ -50,6 +50,7 @@ elif MPS_PRESENT:
 else:
     print("---------------- NO GPU Detected ---------------------")
 
+
 # The code below is based on the changes needed to support MPS backend. It is wrapped with these functions,
 #      to make it easy to switch between CPU, CUDA and MPS based on the executed device.
 

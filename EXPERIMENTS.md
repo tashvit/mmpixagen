@@ -82,3 +82,14 @@ python -m thirdparty.pix2pix.train --dataroot ./datasets/model_d_data/combined -
 ```bash
 python -m thirdparty.pix2pix.train --dataroot ./datasets/model_e_data/combined --name sprite_E1 --model pix2pix --direction AtoB --netG unet_64 --netD pixel --load_size 64 --crop_size 64 --display_winsize 64 --no_flip
 ```
+
+### Model E2
+
+* FOMM model
+
+```bash
+cd thirdparty/fomm/data
+ln -s ../../../datasets/model_e2_data tinyhero-64
+cd ..
+python run.py --config config/tinyhero-256.yaml
+```

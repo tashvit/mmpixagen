@@ -1,9 +1,10 @@
-from tqdm import trange
+from tqdm import trange, tqdm
 import torch
 
 from torch.utils.data import DataLoader
 
 from logger import Logger
+from modules import platform_util
 from modules.model import GeneratorFullModel, DiscriminatorFullModel
 
 from torch.optim.lr_scheduler import MultiStepLR
@@ -41,13 +42,19 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
     generator_full = GeneratorFullModel(kp_detector, generator, discriminator, train_params)
     discriminator_full = DiscriminatorFullModel(kp_detector, generator, discriminator, train_params)
 
-    if torch.cuda.is_available():
-        generator_full = DataParallelWithCallback(generator_full, device_ids=device_ids)
-        discriminator_full = DataParallelWithCallback(discriminator_full, device_ids=device_ids)
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        if platform_util.PLATFORM == platform_util.GpuPlatform.MPS:
+            dev_ids = platform_util.device([0])
+        else:
+            dev_ids = device_ids
+        generator_full = DataParallelWithCallback(generator_full, device_ids=dev_ids)
+        discriminator_full = DataParallelWithCallback(discriminator_full, device_ids=dev_ids)
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], checkpoint_freq=train_params['checkpoint_freq']) as logger:
         for epoch in trange(start_epoch, train_params['num_epochs']):
-            for x in dataloader:
+            x = None
+            generated = None
+            for x in tqdm(dataloader):
                 losses_generator, generated = generator_full(x)
 
                 loss_values = [val.mean() for val in losses_generator.values()]
@@ -78,7 +85,11 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
             scheduler_generator.step()
             scheduler_discriminator.step()
             scheduler_kp_detector.step()
-            
+
+            if x is None:
+                print("X is none?")
+            if generated is None:
+                print("Generator is none?")
             logger.log_epoch(epoch, {'generator': generator,
                                      'discriminator': discriminator,
                                      'kp_detector': kp_detector,

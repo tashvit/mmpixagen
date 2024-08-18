@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 from logger import Logger, Visualizer
 import numpy as np
 import imageio
+
+from modules import platform_util
 from sync_batchnorm import DataParallelWithCallback
 
 
@@ -25,9 +27,9 @@ def reconstruction(config, generator, kp_detector, checkpoint, log_dir, dataset)
         os.makedirs(png_dir)
 
     loss_list = []
-    if torch.cuda.is_available():
-        generator = DataParallelWithCallback(generator)
-        kp_detector = DataParallelWithCallback(kp_detector)
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        generator = DataParallelWithCallback(generator, device_ids=[platform_util.device([0])])
+        kp_detector = DataParallelWithCallback(kp_detector, device_ids=[platform_util.device([0])])
 
     generator.eval()
     kp_detector.eval()
@@ -39,8 +41,8 @@ def reconstruction(config, generator, kp_detector, checkpoint, log_dir, dataset)
         with torch.no_grad():
             predictions = []
             visualizations = []
-            if torch.cuda.is_available():
-                x['video'] = x['video'].cuda()
+            if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+                x['video'] = x['video'].to(platform_util.device([0]))
             kp_source = kp_detector(x['video'][:, :, 0])
             for frame_idx in range(x['video'].shape[2]):
                 source = x['video'][:, :, 0]

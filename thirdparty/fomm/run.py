@@ -1,5 +1,7 @@
 import matplotlib
 
+from modules import platform_util
+
 matplotlib.use('Agg')
 
 import os, sys
@@ -37,7 +39,7 @@ if __name__ == "__main__":
 
     opt = parser.parse_args()
     with open(opt.config) as f:
-        config = yaml.load(f)
+        config = yaml.full_load(f)
 
     if opt.checkpoint is not None:
         log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
@@ -48,23 +50,23 @@ if __name__ == "__main__":
     generator = OcclusionAwareGenerator(**config['model_params']['generator_params'],
                                         **config['model_params']['common_params'])
 
-    if torch.cuda.is_available():
-        generator.to(opt.device_ids[0])
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        generator.to(platform_util.device(opt.device_ids[0]))
     if opt.verbose:
         print(generator)
 
     discriminator = MultiScaleDiscriminator(**config['model_params']['discriminator_params'],
                                             **config['model_params']['common_params'])
-    if torch.cuda.is_available():
-        discriminator.to(opt.device_ids[0])
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        discriminator.to(platform_util.device(opt.device_ids[0]))
     if opt.verbose:
         print(discriminator)
 
     kp_detector = KPDetector(**config['model_params']['kp_detector_params'],
                              **config['model_params']['common_params'])
 
-    if torch.cuda.is_available():
-        kp_detector.to(opt.device_ids[0])
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        kp_detector.to(platform_util.device(opt.device_ids[0]))
 
     if opt.verbose:
         print(kp_detector)

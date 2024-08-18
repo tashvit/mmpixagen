@@ -68,7 +68,7 @@ class DenseMotionNetwork(nn.Module):
 
     def create_deformed_source_image(self, source_image, sparse_motions):
         """
-        Eq 7. in the paper \hat{T}_{s<-d}(z)
+        Eq 7. in the paper \\hat{T}_{s<-d}(z)
         """
         bs, _, h, w = source_image.shape
         source_repeat = source_image.unsqueeze(1).unsqueeze(1).repeat(1, self.num_kp + 1, 1, 1, 1, 1)

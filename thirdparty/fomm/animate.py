@@ -10,6 +10,7 @@ import imageio
 from scipy.spatial import ConvexHull
 import numpy as np
 
+from modules import platform_util
 from sync_batchnorm import DataParallelWithCallback
 
 
@@ -55,9 +56,9 @@ def animate(config, generator, kp_detector, checkpoint, log_dir, dataset):
     if not os.path.exists(png_dir):
         os.makedirs(png_dir)
 
-    if torch.cuda.is_available():
-        generator = DataParallelWithCallback(generator)
-        kp_detector = DataParallelWithCallback(kp_detector)
+    if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
+        generator = DataParallelWithCallback(generator, device_ids=[platform_util.device([0])])
+        kp_detector = DataParallelWithCallback(kp_detector, device_ids=[platform_util.device([0])])
 
     generator.eval()
     kp_detector.eval()

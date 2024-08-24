@@ -1,5 +1,6 @@
 # -- Common/core functions for notebooks and scripts --
 import os
+import sys
 from typing import NamedTuple
 
 import cv2
@@ -33,8 +34,8 @@ class Spec(NamedTuple):
     fomm_driver: str = ""
 
 
-# For different iterations of models such as A1, A2, A3, B1, C1, D1, etc.
-#  spec is created
+# Spec object is created for different iterations of models such as A1, A2, A3, B1, C1, D1, etc.
+#   these objects contain metadata to load and evaluate models
 
 A1 = Spec(
     name="pixel_A1",
@@ -119,6 +120,7 @@ class Model:
         self._model = None
         if self._model_type == "pix2pix":
             self._model = self._load_pix2pix()
+        # Nothing to load for the E2 model as it is executed as a separate script
 
     def _load_pix2pix(self):
         # This section is based on the evaluation notebooks such as eval_A2_A3, eval_B1_C1_D1
@@ -175,7 +177,7 @@ class Model:
         base_path = os.path.dirname(endpoint)
         current_dir = os.curdir
         os.chdir(base_path)
-        command = (f"python {endpoint} --config '{conf}' --checkpoint '{checkpoint_data}'"
+        command = (f"{sys.executable} {endpoint} --config '{conf}' --checkpoint '{checkpoint_data}'"
                    f" --source_image '{image}' --driver '{driver_path}' --result {output_image_path}")
         os.system(command)
         os.chdir(current_dir)

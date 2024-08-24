@@ -26,6 +26,11 @@ class Spec(NamedTuple):
     model_type: str
     dataset_path_prefix: str = ""
     temp_directory: str = ""
+    # Fomm specific
+    fomm_endpoint: str = ""
+    fomm_conf: str = ""
+    fomm_checkpoint_data: str = ""
+    fomm_driver: str = ""
 
 
 # For different iterations of models such as A1, A2, A3, B1, C1, D1, etc.
@@ -96,7 +101,11 @@ E2 = Spec(
     raw_data_dir=E1.raw_data_dir,
     prepared_data_dir="datasets/model_e2_data",
     direction="",
-    model_type="fomm"
+    model_type="fomm",
+    fomm_endpoint="thirdparty/fomm/create_spritesheet.py",
+    fomm_conf="thirdparty/fomm/config/tinyhero-256.yaml",
+    fomm_checkpoint_data="thirdparty/fomm/log/tinyhero-256 18_08_24_18.36.14/00000009-checkpoint.pth.tar",
+    fomm_driver="thirdparty/fomm/data/spritesheet-driver"
 )
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -130,24 +139,47 @@ class Model:
         model.setup(self.opt)
         return model
 
-    def evaluate(self, image_path=None, image=None, output_image_path=None) -> Image:
+    def evaluate(self, image_path=None, image=None, output_image_path=None, driver="front") -> Image:
         """
         Evaluate model on given input
         :param image_path: Image path to load image from (either this or image need to be provided)
         :param image: 64x64 magenta background image (Pillow) to evaluate
             (either this or image_path need to be provided)
+            for fomm models images are converted to 256x256
         :param output_image_path: Path to save output image (if None, will not save to this location)
+        :param driver: Driver images directory for FOMM model. One of (front, back, left, right)
         :return: Image (Pillow) evaluated on given input
         """
-        if not self._model_type == "pix2pix":
-            return
         if image is None and image_path is None:
             raise ValueError("Either image or image path must be specified")
         if image_path:
             input_image = load_64x64_with_magenta_bg(image_path).convert('RGB')
         else:
             input_image = image
-        return self._eval_pix2pix(input_image, output_image_path)
+        # --------------------------------------------
+        if self._model_type == "fomm":
+            if not driver or driver not in ["front", "back", "left", "right"]:
+                raise ValueError("Invalid driver name")
+            if not image_path:
+                raise ValueError("Image path must be specified")
+            return self._eval_fomm(image_path, output_image_path, driver)
+        if self._model_type == "pix2pix":
+            return self._eval_pix2pix(input_image, output_image_path)
+        raise ValueError("Model type not supported")
+
+    def _eval_fomm(self, image, output_image_path, driver):
+        endpoint = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_endpoint))
+        conf = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_conf))
+        checkpoint_data = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_checkpoint_data))
+        driver_path = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_driver, driver))
+        base_path = os.path.dirname(endpoint)
+        current_dir = os.curdir
+        os.chdir(base_path)
+        command = (f"python {endpoint} --config '{conf}' --checkpoint '{checkpoint_data}'"
+                   f" --source_image '{image}' --driver '{driver_path}' --result {output_image_path}")
+        os.system(command)
+        os.chdir(current_dir)
+        return Image.open(output_image_path).convert('RGB')
 
     def _eval_pix2pix(self, input_image, output_image_path):
         tensor = self._im_to_tensor(input_image)
@@ -173,7 +205,7 @@ class Model:
 
 
 def load_model(spec: Spec) -> Model:
-    return Model(spec, model_type="pix2pix")
+    return Model(spec, model_type=spec.model_type)
 
 
 def create_combined_images(arguments: str):

@@ -3,6 +3,7 @@ import json
 import os.path
 import uuid
 from datetime import datetime
+from typing import Tuple
 
 from flask import Flask, request
 import common_functions as core
@@ -22,6 +23,7 @@ FRONT_TO_RIGHT = core.load_model(core.B1)
 FRONT_TO_BACK = core.load_model(core.C1)
 RIGHT_TO_LEFT = core.load_model(core.D1)
 E1_NEXT_SPRITE = core.load_model(core.E1)
+E2_SPRITE = core.load_model(core.E2)
 
 os.chdir(PARENT_DIR)
 app = Flask(__name__, static_url_path='', static_folder=STATIC_DIR)
@@ -38,11 +40,16 @@ def temp_image_file(prefix="I") -> str:
     return os.path.join(DATA_DIR, filename)
 
 
-def create_sheet(input_image, output_image):
-    front_facing = core.load_64x64_with_magenta_bg(input_image).convert('RGB')  # SKETCH_TO_IMAGE.evaluate(input_image)
+def make_directional_images(input_image) -> Tuple[core.Image, core.Image, core.Image, core.Image]:
+    front_facing = core.load_64x64_with_magenta_bg(input_image).convert('RGB')
     right_facing = FRONT_TO_RIGHT.evaluate(image=front_facing)
     back_facing = FRONT_TO_BACK.evaluate(image=front_facing)
     left_facing = RIGHT_TO_LEFT.evaluate(image=right_facing)
+    return back_facing, front_facing, left_facing, right_facing
+
+
+def create_sheet(input_image, output_image):
+    back_facing, front_facing, left_facing, right_facing = make_directional_images(input_image)
     direction_images = [front_facing, right_facing, back_facing, left_facing]
     # For each directional image, attempt to generate individual sprite images using next_sprite_image model (E1)
     sprites = []
@@ -56,6 +63,21 @@ def create_sheet(input_image, output_image):
     sheet.save(output_image)
 
 
+def create_sheet_e2(input_image, output_image):
+    back_facing, front_facing, left_facing, right_facing = make_directional_images(input_image)
+    starting_images = [front_facing, right_facing, back_facing, left_facing]
+    images = []
+    for direction, directional_image in zip(["front", "right", "back", "left"], starting_images):
+        input_temp = temp_image_file(prefix=direction + "_i")
+        directional_image.resize((256, 256), resample=core.Image.Resampling.NEAREST).save(input_temp)
+        single_direction = temp_image_file(prefix=direction + "_o")
+        img = E2_SPRITE.evaluate(image_path=input_temp, output_image_path=single_direction, driver=direction)
+        images.append(img)
+    sheet = core.images_to_sprite_sheet(images, max_horiz=1)
+    sheet = sheet.resize((sheet.width // 4, sheet.height // 4), resample=core.Image.Resampling.NEAREST)
+    sheet.save(output_image)
+
+
 @app.route("/gen", methods=["POST"])
 def generate_image():
     data = request.get_json(force=True)
@@ -66,7 +88,7 @@ def generate_image():
             "ContentType": "application/json"}
     # gen-image is used to generate a single image from a pixel art
     # gen-sheet is used to generate a spritesheet
-    if task not in ("gen-image", "gen-sheet"):
+    if task not in ("gen-image", "gen-sheet-e1", "gen-sheet-e2"):
         return json.dumps({"error": "Invalid task", "image": "", "sheet": ""}), 400, {"ContentType": "application/json"}
     image_path = temp_image_file(prefix="I")
     output_image_path = temp_image_file(prefix="O")
@@ -84,7 +106,10 @@ def generate_image():
         return json.dumps({"image": b64_encoded, "error": "", "sheet": ""}), 200, {
             "ContentType": "application/json"}
     else:
-        create_sheet(input_image=image_path, output_image=output_image_path)
+        if task == "gen-sheet-e1":
+            create_sheet(input_image=image_path, output_image=output_image_path)
+        else:  # gen-sheet-e2
+            create_sheet_e2(input_image=image_path, output_image=output_image_path)
         with open(output_image_path, "rb") as f:
             b64_encoded = base64.b64encode(f.read())
         b64_encoded = DATA_IMAGE_HEADER + b64_encoded.decode("utf-8")

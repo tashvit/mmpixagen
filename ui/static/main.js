@@ -139,13 +139,13 @@ function genImage() {
     })
 }
 
-function genSpriteSheet() {
+function genSpriteSheet(model) {
     clearProgress();
     const canvasObject = document.getElementById("pixelArt");
     const b64Data = canvasObject.toDataURL();
     // Call API /gen
     $.ajax("/gen", {
-        data: JSON.stringify({"image": b64Data, "task": "gen-sheet"}),
+        data: JSON.stringify({"image": b64Data, "task": "gen-sheet-" + model}),
         contentType: "application/json",
         type: "POST",
         success: function (data) {

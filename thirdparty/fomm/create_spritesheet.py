@@ -81,12 +81,17 @@ def make_animation(source_image, driving_video, generator, kp_detector, relative
 
 
 def main():
+    driver_help = """
+    Spritesheet driver path should have another subfolder with a suitable driver images.
+    Use 0 padded numbers for png files of size 256x256 
+    example: driver/0000/00.png, driver/0000/01.png .... driver/0000/32.png
+    """.strip()
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
     parser.add_argument("--checkpoint", default='vox-cpk.pth.tar', help="path to checkpoint to restore")
-    parser.add_argument("--source_image", default='hero.png', help="path to source image")
-    parser.add_argument("--driver", default='driver', dest='driver', help="path to driving video source")
-    parser.add_argument("--result", default='result.png', help="path to output")
+    parser.add_argument("--source_image", default='hero.png', help="path to single source image 256x256")
+    parser.add_argument("--driver", default='driver', dest='driver', help=driver_help)
+    parser.add_argument("--result", default='result.png', help="path to output spritesheet")
 
     parser.set_defaults(relative=False)
     parser.set_defaults(adapt_scale=False)

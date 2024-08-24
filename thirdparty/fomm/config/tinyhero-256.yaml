@@ -61,11 +61,11 @@ train_params:
 
 reconstruction_params:
   num_videos: 2
-  format: '.mp4'
+  format: '.gif'
 
 animate_params:
   num_pairs: 4
-  format: '.mp4'
+  format: '.gif'
   normalization_params:
     adapt_movement_scale: False
     use_relative_movement: True

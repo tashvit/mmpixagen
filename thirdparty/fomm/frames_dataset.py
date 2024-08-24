@@ -1,5 +1,5 @@
 import os
-from skimage import io, img_as_float32
+from skimage import io, img_as_float32  # noqa
 from skimage.color import gray2rgb
 from sklearn.model_selection import train_test_split
 from imageio import mimread
@@ -61,13 +61,17 @@ class FramesDataset(Dataset):
     """
 
     def __init__(self, root_dir, frame_shape=(256, 256, 3), id_sampling=False, is_train=True,
-                 random_seed=0, pairs_list=None, augmentation_params=None):
+                 random_seed=0, pairs_list=None, augmentation_params=None, is_spritesheet=False):
         self.root_dir = root_dir
         self.videos = os.listdir(root_dir)
         self.frame_shape = tuple(frame_shape)
         self.pairs_list = pairs_list
         self.id_sampling = id_sampling
-        if os.path.exists(os.path.join(root_dir, 'train')):
+        self.is_spritesheet = is_spritesheet
+        if self.is_spritesheet:
+            print("Spritesheet mode:", self.videos)
+            train_videos, test_videos = self.videos, self.videos
+        elif os.path.exists(os.path.join(root_dir, 'train')):
             assert os.path.exists(os.path.join(root_dir, 'test'))
             print("Use predefined train-test split.")
             if id_sampling:
@@ -81,7 +85,6 @@ class FramesDataset(Dataset):
         else:
             print("Use random train-test split.")
             train_videos, test_videos = train_test_split(self.videos, random_state=random_seed, test_size=0.2)
-
         if is_train:
             self.videos = train_videos
         else:
@@ -112,6 +115,9 @@ class FramesDataset(Dataset):
             num_frames = len(frames)
             frame_idx = np.sort(np.random.choice(num_frames, replace=True, size=2))
             video_array = [img_as_float32(io.imread(os.path.join(path, frames[idx]))) for idx in frame_idx]
+        elif self.is_spritesheet and os.path.isdir(path):
+            frames = sorted(os.listdir(path))
+            video_array = [img_as_float32(io.imread(os.path.join(path, video_name))) for video_name in frames]
         else:
             video_array = read_video(path, frame_shape=self.frame_shape)
             num_frames = len(video_array)
@@ -129,6 +135,8 @@ class FramesDataset(Dataset):
 
             out['driving'] = driving.transpose((2, 0, 1))
             out['source'] = source.transpose((2, 0, 1))
+        elif self.is_spritesheet:
+            out['video'] = np.array(video_array, dtype='float32')
         else:
             video = np.array(video_array, dtype='float32')
             out['video'] = video.transpose((3, 0, 1, 2))

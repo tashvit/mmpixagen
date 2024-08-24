@@ -51,10 +51,10 @@ def animate(config, generator, kp_detector, checkpoint, log_dir, dataset):
         raise AttributeError("Checkpoint should be specified for mode='animate'.")
 
     if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+        os.makedirs(log_dir, exist_ok=True)
 
     if not os.path.exists(png_dir):
-        os.makedirs(png_dir)
+        os.makedirs(png_dir, exist_ok=True)
 
     if platform_util.PLATFORM != platform_util.GpuPlatform.CPU:
         generator = DataParallelWithCallback(generator, device_ids=[platform_util.device([0])])

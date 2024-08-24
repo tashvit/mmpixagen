@@ -1,7 +1,7 @@
 ----------------- Options ---------------
              aspect_ratio: 1.0                           
                batch_size: 1                             
-          checkpoints_dir: ./checkpoints                 
+          checkpoints_dir: /Users/tashvit/Documents/GitHub/mmpixagen/checkpoints	[default: ./checkpoints]
                 crop_size: 64                            	[default: 256]
                  dataroot: datasets/model_e_data         	[default: None]
              dataset_mode: aligned                       

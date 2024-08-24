@@ -18,6 +18,10 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 ALLOWED_EXTENSIONS = {'png'}
 
 SKETCH_TO_IMAGE = core.load_model(core.A3)
+FRONT_TO_RIGHT = core.load_model(core.B1)
+FRONT_TO_BACK = core.load_model(core.C1)
+RIGHT_TO_LEFT = core.load_model(core.D1)
+E1_NEXT_SPRITE = core.load_model(core.E1)
 
 os.chdir(PARENT_DIR)
 app = Flask(__name__, static_url_path='', static_folder=STATIC_DIR)
@@ -34,6 +38,24 @@ def temp_image_file(prefix="I") -> str:
     return os.path.join(DATA_DIR, filename)
 
 
+def create_sheet(input_image, output_image):
+    front_facing = core.load_64x64_with_magenta_bg(input_image).convert('RGB')  # SKETCH_TO_IMAGE.evaluate(input_image)
+    right_facing = FRONT_TO_RIGHT.evaluate(image=front_facing)
+    back_facing = FRONT_TO_BACK.evaluate(image=front_facing)
+    left_facing = RIGHT_TO_LEFT.evaluate(image=right_facing)
+    direction_images = [front_facing, right_facing, back_facing, left_facing]
+    # For each directional image, attempt to generate individual sprite images using next_sprite_image model (E1)
+    sprites = []
+    for single_image in direction_images:
+        curr = single_image
+        sprites.append(curr)
+        for i in range(7):
+            curr = E1_NEXT_SPRITE.evaluate(image=curr)
+            sprites.append(curr)
+    sheet = core.images_to_sprite_sheet(sprites)
+    sheet.save(output_image)
+
+
 @app.route("/gen", methods=["POST"])
 def generate_image():
     data = request.get_json(force=True)
@@ -46,13 +68,14 @@ def generate_image():
     # gen-sheet is used to generate a spritesheet
     if task not in ("gen-image", "gen-sheet"):
         return json.dumps({"error": "Invalid task", "image": "", "sheet": ""}), 400, {"ContentType": "application/json"}
+    image_path = temp_image_file(prefix="I")
+    output_image_path = temp_image_file(prefix="O")
+    image = image[len(DATA_IMAGE_HEADER):]
+    base64_decoded = base64.b64decode(image)
+    with open(image_path, "wb") as f:
+        f.write(base64_decoded)
+
     if task == "gen-image":
-        image_path = temp_image_file(prefix="I")
-        output_image_path = temp_image_file(prefix="O")
-        image = image[len(DATA_IMAGE_HEADER):]
-        base64_decoded = base64.b64decode(image)
-        with open(image_path, "wb") as f:
-            f.write(base64_decoded)
         SKETCH_TO_IMAGE.evaluate(image_path=image_path, output_image_path=output_image_path)
         core.resize_to_256(output_image_path)
         with open(output_image_path, "rb") as f:
@@ -61,8 +84,12 @@ def generate_image():
         return json.dumps({"image": b64_encoded, "error": "", "sheet": ""}), 200, {
             "ContentType": "application/json"}
     else:
-        # TODO implement spritesheet generation
-        return json.dumps({"error": "Invalid task", "image": "", "sheet": ""}), 400, {"ContentType": "application/json"}
+        create_sheet(input_image=image_path, output_image=output_image_path)
+        with open(output_image_path, "rb") as f:
+            b64_encoded = base64.b64encode(f.read())
+        b64_encoded = DATA_IMAGE_HEADER + b64_encoded.decode("utf-8")
+        return json.dumps({"error": "", "image": "", "sheet": b64_encoded}), 200, {
+            "ContentType": "application/json"}
 
 
 @app.route("/")

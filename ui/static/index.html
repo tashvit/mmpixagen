@@ -41,9 +41,11 @@
                                         <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"></path>
                                     </svg>
                                 </label>
-                                <input class="margin" type="file" formnovalidate id="uploadSketch" name="file" accept="image/png">
+                                <input class="margin" type="file" formnovalidate id="uploadSketch" name="file"
+                                       accept="image/png">
                                 <!-- Download button -->
-                                <button type="button" class="btn btn-outline-primary">
+                                <button type="button" class="btn btn-outline-primary"
+                                        onclick="downloadCanvas('sketch')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                                          class="bi bi-download" viewBox="0 0 16 16">
                                         <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"></path>
@@ -56,21 +58,24 @@
                             <div class="col">
                                 <div class="row">
                                     <!-- Pencil button -->
-                                    <button type="button" class="btn btn-outline-primary" onclick="sketchUsePen()">
+                                    <button type="button" class="btn btn-outline-primary" style="width: 64px"
+                                            onclick="sketchUsePen()">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                              fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                                             <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"></path>
                                         </svg>
                                     </button>
                                     <!-- Eraser button -->
-                                    <button type="button" class="btn btn-outline-primary" onclick="sketchUseEraser()">
+                                    <button type="button" class="btn btn-outline-primary" style="width: 64px"
+                                            onclick="sketchUseEraser()">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                              fill="currentColor" class="bi bi-eraser-fill" viewBox="0 0 16 16">
                                             <path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z"></path>
                                         </svg>
                                     </button>
                                     <!-- Clear button -->
-                                    <button type="button" class="btn btn-outline-primary" onclick="sketchClearCanvas()">
+                                    <button type="button" class="btn btn-outline-primary" style="width: 64px"
+                                            onclick="sketchClearCanvas()">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                              fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
                                             <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"></path>
@@ -79,8 +84,8 @@
                                 </div>
                             </div>
                             <!-- Div for drawn/uploaded sketch-->
-                            <div class="col">
-                                <canvas id="sketch" width="256" height="256" style="border: 1px solid black"></canvas>
+                            <div class="col canvas-parent">
+                                <canvas id="sketch" width="256" height="256"></canvas>
                             </div>
                         </div>
                     </div>
@@ -99,7 +104,7 @@
                                 To pixel art
                             </button>
                             <!-- 'Generate spritesheet' button -->
-                            <button type="button" class="btn btn-primary">
+                            <button type="button" class="btn btn-primary" onclick="genSpriteSheet()">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                                      class="bi bi-gear-fill" viewBox="0 0 16 16">
                                     <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"></path>
@@ -107,7 +112,7 @@
                                 Generate spritesheet
                             </button>
                             <!-- 'Download spritesheet' button -->
-                            <button type="button" class="btn btn-success">
+                            <button type="button" class="btn btn-success" onclick="downloadCanvas('sheet')">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                                      class="bi bi-download" viewBox="0 0 16 16">
                                     <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"></path>
@@ -123,15 +128,18 @@
                         <div class="row">
                             <div class="col">
                                 <!-- Upload button -->
-                                <button type="button" class="btn btn-outline-primary">
+                                <label for="uploadPixel" class="custom-file-upload btn btn-outline-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                                          class="bi bi-upload" viewBox="0 0 16 16">
                                         <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"></path>
                                         <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"></path>
                                     </svg>
-                                </button>
+                                </label>
+                                <input class="margin" type="file" formnovalidate id="uploadPixel" name="file"
+                                       accept="image/png">
                                 <!-- Download button -->
-                                <button type="button" class="btn btn-outline-primary">
+                                <button type="button" class="btn btn-outline-primary"
+                                        onclick="downloadCanvas('pixelArt')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                                          class="bi bi-download" viewBox="0 0 16 16">
                                         <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"></path>
@@ -142,8 +150,8 @@
                         </div>
                         <!-- Div to hold pixel sprite image -->
                         <div class="row">
-                            <div class="col">
-                                <canvas id="pixelArt" width="256" height="256" style="border: 1px solid black"></canvas>
+                            <div class="col canvas-parent" style="max-width: 276px">
+                                <canvas id="pixelArt" width="256" height="256"></canvas>
                             </div>
                         </div>
                     </div>
@@ -152,17 +160,18 @@
                 <!-- End of top row elements section -->
 
                 <!-- Generate spritesheet section -->
-                <div class="row" style="margin-top: 30px">
-                    <div id="sprite-sheet-gen"></div>
+                <div class="row canvas-parent" style="margin-top: 30px;">
+                    <canvas id="sheet" width="512px" height="256px" style=""></canvas>
                 </div>
                 <!-- End of generate spritesheet section -->
 
                 <!-- Progress bar section -->
                 <div class="row">
                     <div class="col">
-                        <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25"
+                        <div id="progressParent" class="progress" role="progressbar" aria-label="Progress Bar"
+                             aria-valuenow="0"
                              aria-valuemin="0" aria-valuemax="100" style="height: 32px">
-                            <div class="progress-bar" style="width: 25%">25%</div>
+                            <div id="progress" class="progress-bar" style="width: 0%">0%</div>
                         </div>
                     </div>
                 </div>

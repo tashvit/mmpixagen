@@ -100,7 +100,25 @@ function sketchClearCanvas() {
     sketchCanvas.clearDraw();
 }
 
+function setProgress(pr) {
+    const progress = $("#progress");
+    progress.width(pr + "%");
+    progress.text(pr + "%");
+}
+
+function clearProgress() {
+    const progress = $("#progress");
+    const parent = $("#progressParent");
+    parent.hide();
+    parent.addClass("notransition");
+    progress.width(0);
+    progress.text("0%");
+    parent.removeClass("notransition");
+    parent.show();
+}
+
 function genImage() {
+    clearProgress();
     const b64Data = sketchCanvas.canvas.toDataURL();
     // Call API /gen
     $.ajax("/gen", {
@@ -108,15 +126,49 @@ function genImage() {
         contentType: "application/json",
         type: "POST",
         success: function (data) {
+            setProgress(50);
             const json = $.parseJSON(data);
             const img = new Image();
             img.onload = function () {
                 document.getElementById("pixelArt").getContext("2d").drawImage(img, 0, 0);
+                setProgress(100);
+                setTimeout(clearProgress, 2000);
             }
             img.src = json.image;
         }
     })
 }
+
+function genSpriteSheet() {
+    clearProgress();
+    const canvasObject = document.getElementById("pixelArt");
+    const b64Data = canvasObject.toDataURL();
+    // Call API /gen
+    $.ajax("/gen", {
+        data: JSON.stringify({"image": b64Data, "task": "gen-sheet"}),
+        contentType: "application/json",
+        type: "POST",
+        success: function (data) {
+            setProgress(50);
+            const json = $.parseJSON(data);
+            const img = new Image();
+            img.onload = function () {
+                document.getElementById("sheet").getContext("2d").drawImage(img, 0, 0);
+                setProgress(100);
+                setTimeout(clearProgress, 2000);
+            }
+            img.src = json.sheet;
+        }
+    })
+}
+
+function downloadCanvas(elementId) {
+    var link = document.createElement('a');
+    link.download = 'image-' + elementId + '.png';
+    link.href = document.getElementById(elementId).toDataURL()
+    link.click();
+}
+
 
 (function () {
     console.log("Creating sketch");
@@ -129,6 +181,18 @@ function genImage() {
         const img = new Image();
         img.onload = function draw() {
             sketchCanvas.ctx.drawImage(img, 0, 0, 256, 256);
+        };
+        const imageUrl = URL.createObjectURL(this.files[0]);
+        console.log(imageUrl);
+        img.src = imageUrl;
+    };
+
+    // On upload a pixel art clicked
+    document.getElementById("uploadPixel").onchange = function (e) {
+        const img = new Image();
+        img.onload = function draw() {
+            const canvas = $("#pixelArt")[0];
+            canvas.getContext("2d").drawImage(img, 0, 0, 256, 256);
         };
         const imageUrl = URL.createObjectURL(this.files[0]);
         console.log(imageUrl);

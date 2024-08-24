@@ -171,10 +171,7 @@ function downloadCanvas(elementId) {
 
 
 (function () {
-    console.log("Creating sketch");
     sketchCanvas = new CanvasTool("#sketch");
-    console.log(sketchCanvas.canvasDom);
-    console.log(sketchCanvas.canvas);
 
     // On upload a sketch clicked
     document.getElementById("uploadSketch").onchange = function (e) {
@@ -183,7 +180,6 @@ function downloadCanvas(elementId) {
             sketchCanvas.ctx.drawImage(img, 0, 0, 256, 256);
         };
         const imageUrl = URL.createObjectURL(this.files[0]);
-        console.log(imageUrl);
         img.src = imageUrl;
     };
 
@@ -195,7 +191,6 @@ function downloadCanvas(elementId) {
             canvas.getContext("2d").drawImage(img, 0, 0, 256, 256);
         };
         const imageUrl = URL.createObjectURL(this.files[0]);
-        console.log(imageUrl);
         img.src = imageUrl;
     };
 })();

@@ -100,6 +100,7 @@ E2 = Spec(
 )
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
+CHECKPOINT_PATH = os.path.join(ROOT_PATH, "checkpoints")
 
 
 class Model:
@@ -116,7 +117,7 @@ class Model:
                 "--name", self._spec.name, "--model", self._spec.model_type,
                 "--direction", self._spec.direction, "--phase", "test", "--netG",
                 "unet_64", "--netD", "pixel", "--load_size", "64",
-                "--crop_size", "64", "--display_winsize", "64"]
+                "--crop_size", "64", "--display_winsize", "64", "--checkpoints_dir", CHECKPOINT_PATH, ]
 
         # Parsed test options
         self.opt = TestOptions().parse(args)
@@ -158,7 +159,7 @@ class Model:
         im = Image.fromarray(im)
         if output_image_path:
             im.save(output_image_path)
-            im = im.open(output_image_path)
+            im = Image.open(output_image_path)
         else:
             im.save("temp.png")
             im = Image.open("temp.png")
@@ -335,6 +336,15 @@ def load_with_magenta_background(input_img_path):
     # Convert back to RGB to remove alpha channel
     final_img = img_with_magenta_bg.convert("RGB").convert("RGBA")
     return final_img
+
+
+def resize_to_256(image_path):
+    """
+    Turn given image to 256x256
+    """
+    img = Image.open(image_path).convert("RGB")
+    img = img.resize((256, 256), resample=Image.Resampling.NEAREST)
+    img.save(image_path)
 
 
 def load_64x64_with_magenta_bg(image_path):

@@ -7,7 +7,7 @@ class CanvasTool {
         this.ctx = this.canvas.getContext("2d")
         this.offsetX = 48;
         this.offsetY = 48;
-        this.initState();
+        this.clearDraw();
         this.initEvents();
     }
 
@@ -65,7 +65,7 @@ class CanvasTool {
         this.ctx.beginPath()
         this.ctx.moveTo(this.prevX, this.prevY);
         this.ctx.lineTo(this.currX, this.currY);
-        this.ctx.strokeStyle = (this.tool === "pen") ? "black" : "white";
+        this.ctx.strokeStyle = (this.tool === "pen") ? "rgb(0,0,0)" : "rgb(255,0,255)";
         this.ctx.lineWidth = 4;
         this.ctx.stroke();
         this.ctx.closePath();
@@ -81,7 +81,8 @@ class CanvasTool {
 
     clearDraw() {
         this.initState();
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = "rgb(255,0,255)"
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 }
 
@@ -97,6 +98,24 @@ function sketchUseEraser() {
 
 function sketchClearCanvas() {
     sketchCanvas.clearDraw();
+}
+
+function genImage() {
+    const b64Data = sketchCanvas.canvas.toDataURL();
+    // Call API /gen
+    $.ajax("/gen", {
+        data: JSON.stringify({"image": b64Data, "task": "gen-image"}),
+        contentType: "application/json",
+        type: "POST",
+        success: function(data) {
+            const json = $.parseJSON(data);
+            const img = new Image();
+            img.onload = function () {
+                document.getElementById("pixelArt").getContext("2d").drawImage(img, 0, 0);
+            }
+            img.src = json.image;
+        }
+    })
 }
 
 (function () {

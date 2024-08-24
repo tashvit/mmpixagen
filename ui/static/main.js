@@ -107,7 +107,7 @@ function genImage() {
         data: JSON.stringify({"image": b64Data, "task": "gen-image"}),
         contentType: "application/json",
         type: "POST",
-        success: function(data) {
+        success: function (data) {
             const json = $.parseJSON(data);
             const img = new Image();
             img.onload = function () {
@@ -123,4 +123,15 @@ function genImage() {
     sketchCanvas = new CanvasTool("#sketch");
     console.log(sketchCanvas.canvasDom);
     console.log(sketchCanvas.canvas);
+
+    // On upload a sketch clicked
+    document.getElementById("uploadSketch").onchange = function (e) {
+        const img = new Image();
+        img.onload = function draw() {
+            sketchCanvas.ctx.drawImage(img, 0, 0, 256, 256);
+        };
+        const imageUrl = URL.createObjectURL(this.files[0]);
+        console.log(imageUrl);
+        img.src = imageUrl;
+    };
 })();

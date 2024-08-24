@@ -1,9 +1,3 @@
-input[type="file"] {
-    display: block;
-    width: 66px;
-    height: 25px;
-    clip: rect(0px 0px 0px 0px);
-    position: absolute;
-    left: 0;
-    top: 0;
+#uploadSketch {
+    display: none;
 }

@@ -5,8 +5,10 @@ class CanvasTool {
         this.canvasDom = $(query);
         this.canvas = this.canvasDom[0]
         this.ctx = this.canvas.getContext("2d")
-        this.offsetX = 48;
-        this.offsetY = 48;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.lineWidth = 4;
+        this.mirrorDraw = false;
         this.clearDraw();
         this.initEvents();
     }
@@ -62,11 +64,25 @@ class CanvasTool {
     }
 
     draw() {
-        this.ctx.beginPath()
-        this.ctx.moveTo(this.prevX, this.prevY);
-        this.ctx.lineTo(this.currX, this.currY);
+        if (this.mirrorDraw) {
+            const mirroredPrevX = this.canvas.width - this.prevX;
+            const mirroredCurX = this.canvas.width - this.currX;
+            // Left
+            this.stroke(this.prevX, this.prevY, this.currX, this.currY);
+            // Right
+            this.stroke(mirroredPrevX, this.prevY, mirroredCurX, this.currY);
+        } else {
+            this.stroke(this.prevX, this.prevY, this.currX, this.currY);
+        }
+
+    }
+
+    stroke(x1, y1, x2, y2) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
         this.ctx.strokeStyle = (this.tool === "pen") ? "rgb(0,0,0)" : "rgb(255,0,255)";
-        this.ctx.lineWidth = 4;
+        this.ctx.lineWidth = this.lineWidth;
         this.ctx.stroke();
         this.ctx.closePath();
     }
@@ -79,6 +95,10 @@ class CanvasTool {
         this.tool = "eraser"
     }
 
+    toggleMirror() {
+        this.mirrorDraw = !this.mirrorDraw;
+    }
+
     clearDraw() {
         this.initState();
         this.ctx.fillStyle = "rgb(255,0,255)"
@@ -86,7 +106,7 @@ class CanvasTool {
     }
 }
 
-var sketchCanvas;
+let sketchCanvas;
 
 function sketchUsePen() {
     sketchCanvas.usePen();
@@ -98,6 +118,18 @@ function sketchUseEraser() {
 
 function sketchClearCanvas() {
     sketchCanvas.clearDraw();
+}
+
+function sketchSetBrushSize() {
+    if (sketchCanvas.lineWidth === 4) {
+        sketchCanvas.lineWidth = 16;
+    } else {
+        sketchCanvas.lineWidth = 4;
+    }
+}
+
+function sketchCanvasSetMirror() {
+    sketchCanvas.toggleMirror();
 }
 
 function setProgress(pr) {
@@ -143,13 +175,14 @@ function genSpriteSheet(model) {
     clearProgress();
     const canvasObject = document.getElementById("pixelArt");
     const b64Data = canvasObject.toDataURL();
+    setProgress(20); // Show some progress until all work is done
     // Call API /gen
     $.ajax("/gen", {
         data: JSON.stringify({"image": b64Data, "task": "gen-sheet-" + model}),
         contentType: "application/json",
         type: "POST",
         success: function (data) {
-            setProgress(50);
+            setProgress(80);
             const json = $.parseJSON(data);
             const img = new Image();
             img.onload = function () {
@@ -163,7 +196,7 @@ function genSpriteSheet(model) {
 }
 
 function downloadCanvas(elementId) {
-    var link = document.createElement('a');
+    const link = document.createElement('a');
     link.download = 'image-' + elementId + '.png';
     link.href = document.getElementById(elementId).toDataURL()
     link.click();
@@ -179,8 +212,7 @@ function downloadCanvas(elementId) {
         img.onload = function draw() {
             sketchCanvas.ctx.drawImage(img, 0, 0, 256, 256);
         };
-        const imageUrl = URL.createObjectURL(this.files[0]);
-        img.src = imageUrl;
+        img.src = URL.createObjectURL(this.files[0]);
     };
 
     // On upload a pixel art clicked
@@ -190,7 +222,6 @@ function downloadCanvas(elementId) {
             const canvas = $("#pixelArt")[0];
             canvas.getContext("2d").drawImage(img, 0, 0, 256, 256);
         };
-        const imageUrl = URL.createObjectURL(this.files[0]);
-        img.src = imageUrl;
+        img.src = URL.createObjectURL(this.files[0]);
     };
 })();

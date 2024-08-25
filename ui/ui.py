@@ -3,9 +3,9 @@ import json
 import os.path
 import uuid
 from datetime import datetime
-from typing import Tuple
 
 from flask import Flask, request
+
 import common_functions as core
 
 DATA_IMAGE_HEADER = "data:image/png;base64,"

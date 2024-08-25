@@ -1,7 +1,7 @@
 # -- Common/core functions for notebooks and scripts --
 import os
 import sys
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 import cv2
 import numpy as np
@@ -175,12 +175,12 @@ class Model:
         checkpoint_data = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_checkpoint_data))
         driver_path = os.path.abspath(os.path.join(ROOT_PATH, self._spec.fomm_driver, driver))
         base_path = os.path.dirname(endpoint)
-        current_dir = os.curdir
-        os.chdir(base_path)
+        # current_dir = os.curdir
+        # os.chdir(base_path)
         command = (f"{sys.executable} {endpoint} --config '{conf}' --checkpoint '{checkpoint_data}'"
                    f" --source_image '{image}' --driver '{driver_path}' --result {output_image_path}")
         os.system(command)
-        os.chdir(current_dir)
+        # os.chdir(current_dir)
         return Image.open(output_image_path).convert('RGB')
 
     def _eval_pix2pix(self, input_image, output_image_path):
@@ -413,3 +413,107 @@ def turn_magenta(input_img_path, output_img_path):
     final_img = load_with_magenta_background(input_img_path)
     # Save image to output directory
     final_img.save(output_img_path)
+
+
+def load_test_sheet(sheet_path):
+    """
+    Load sprite sheet images in given path as a single spritesheet image
+    :param sheet_path: path to sprite sheet images
+    :return: single 8x4 sprite sheet image (size 512x256), front_facing_image
+    """
+    sheet_order = [
+        # front
+        8, 9, 10, 11, 12, 13, 14, 15,
+        # right
+        24, 25, 26, 27, 28, 29, 30, 31,
+        # back
+        0, 1, 2, 3, 4, 5, 6, 7,
+        # left
+        16, 17, 18, 19, 20, 21, 22, 23,
+    ]
+    images = []
+    for i in sheet_order:
+        filename = os.path.join(sheet_path, f"{i:02d}.png")
+        images.append(Image.open(filename))
+    sheet = images_to_sprite_sheet(images)
+    front_facing_image = os.path.join(sheet_path, "08.png")  # a front facing image
+    if sheet.width > 64 * 8:
+        return sheet.resize((sheet.width // 4, sheet.height // 4),
+                            resample=Image.Resampling.NEAREST), front_facing_image
+    else:
+        return sheet, front_facing_image
+
+
+class Inference:
+    def __init__(self, get_temp_file):
+        """
+        Inference facade
+        :param get_temp_file: function to get a temporary image file (takes an optional prefix)
+        """
+        self._sketch_to_image = load_model(A3)
+        self._front_to_right = load_model(B1)
+        self._front_to_back = load_model(C1)
+        self._right_to_left = load_model(D1)
+        self._e1_next_sprite = load_model(E1)
+        self._e2_sprite = load_model(E2)
+        self._get_temp = get_temp_file
+
+    def sketch_to_image(self, sketch_path, output_path):
+        return self._sketch_to_image.evaluate(image_path=sketch_path, output_image_path=output_path)
+
+    def make_directional_images(self, input_image) -> Tuple[Image, Image, Image, Image]:
+        """
+        Use given input image file to make (back, front, left, right) image tuple
+        :param input_image: path to input image file (front facing)
+        """
+        front_facing = load_64x64_with_magenta_bg(input_image).convert('RGB')
+        right_facing = self._front_to_right.evaluate(image=front_facing)
+        back_facing = self._front_to_back.evaluate(image=front_facing)
+        left_facing = self._right_to_left.evaluate(image=right_facing)
+        return back_facing, front_facing, left_facing, right_facing
+
+    def directional_images_sheet(self, input_image) -> Image:
+        images = list(self.make_directional_images(input_image))
+        return images_to_sprite_sheet(images)
+
+    def create_sheet_e1(self, input_image, output_image=None):
+        """
+        Create a spritesheet using E1 model
+        :param input_image: path to input image file
+        :param output_image: path to output image file
+        """
+        back_facing, front_facing, left_facing, right_facing = self.make_directional_images(input_image)
+        direction_images = [front_facing, right_facing, back_facing, left_facing]
+        # For each directional image, attempt to generate individual sprite images using next_sprite_image model (E1)
+        sprites = []
+        for single_image in direction_images:
+            curr = single_image
+            sprites.append(curr)
+            for i in range(7):
+                curr = self._e1_next_sprite.evaluate(image=curr)
+                sprites.append(curr)
+        sheet = images_to_sprite_sheet(sprites)
+        if output_image:
+            sheet.save(output_image)
+        return sheet
+
+    def create_sheet_e2(self, input_image, output_image=None):
+        """
+        Create a spritesheet using E2 model
+        :param input_image: path to input image file
+        :param output_image: path to output image file
+        """
+        back_facing, front_facing, left_facing, right_facing = self.make_directional_images(input_image)
+        starting_images = [front_facing, right_facing, back_facing, left_facing]
+        images = []
+        for direction, directional_image in zip(["front", "right", "back", "left"], starting_images):
+            input_temp = self._get_temp(prefix=direction + "_i")
+            directional_image.resize((256, 256), resample=Image.Resampling.NEAREST).save(input_temp)
+            single_direction = self._get_temp(prefix=direction + "_o")
+            img = self._e2_sprite.evaluate(image_path=input_temp, output_image_path=single_direction, driver=direction)
+            images.append(img)
+        sheet = images_to_sprite_sheet(images, max_horiz=1)
+        sheet = sheet.resize((sheet.width // 4, sheet.height // 4), resample=Image.Resampling.NEAREST)
+        if output_image:
+            sheet.save(output_image)
+        return sheet

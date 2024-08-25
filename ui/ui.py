@@ -18,13 +18,6 @@ PARENT_DIR = os.path.dirname(CODE_DIR)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 ALLOWED_EXTENSIONS = {'png'}
 
-SKETCH_TO_IMAGE = core.load_model(core.A3)
-FRONT_TO_RIGHT = core.load_model(core.B1)
-FRONT_TO_BACK = core.load_model(core.C1)
-RIGHT_TO_LEFT = core.load_model(core.D1)
-E1_NEXT_SPRITE = core.load_model(core.E1)
-E2_SPRITE = core.load_model(core.E2)
-
 os.chdir(PARENT_DIR)
 app = Flask(__name__, static_url_path='', static_folder=STATIC_DIR)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -40,42 +33,7 @@ def temp_image_file(prefix="I") -> str:
     return os.path.join(DATA_DIR, filename)
 
 
-def make_directional_images(input_image) -> Tuple[core.Image, core.Image, core.Image, core.Image]:
-    front_facing = core.load_64x64_with_magenta_bg(input_image).convert('RGB')
-    right_facing = FRONT_TO_RIGHT.evaluate(image=front_facing)
-    back_facing = FRONT_TO_BACK.evaluate(image=front_facing)
-    left_facing = RIGHT_TO_LEFT.evaluate(image=right_facing)
-    return back_facing, front_facing, left_facing, right_facing
-
-
-def create_sheet(input_image, output_image):
-    back_facing, front_facing, left_facing, right_facing = make_directional_images(input_image)
-    direction_images = [front_facing, right_facing, back_facing, left_facing]
-    # For each directional image, attempt to generate individual sprite images using next_sprite_image model (E1)
-    sprites = []
-    for single_image in direction_images:
-        curr = single_image
-        sprites.append(curr)
-        for i in range(7):
-            curr = E1_NEXT_SPRITE.evaluate(image=curr)
-            sprites.append(curr)
-    sheet = core.images_to_sprite_sheet(sprites)
-    sheet.save(output_image)
-
-
-def create_sheet_e2(input_image, output_image):
-    back_facing, front_facing, left_facing, right_facing = make_directional_images(input_image)
-    starting_images = [front_facing, right_facing, back_facing, left_facing]
-    images = []
-    for direction, directional_image in zip(["front", "right", "back", "left"], starting_images):
-        input_temp = temp_image_file(prefix=direction + "_i")
-        directional_image.resize((256, 256), resample=core.Image.Resampling.NEAREST).save(input_temp)
-        single_direction = temp_image_file(prefix=direction + "_o")
-        img = E2_SPRITE.evaluate(image_path=input_temp, output_image_path=single_direction, driver=direction)
-        images.append(img)
-    sheet = core.images_to_sprite_sheet(images, max_horiz=1)
-    sheet = sheet.resize((sheet.width // 4, sheet.height // 4), resample=core.Image.Resampling.NEAREST)
-    sheet.save(output_image)
+INFERENCE = core.Inference(temp_image_file)
 
 
 @app.route("/gen", methods=["POST"])
@@ -98,7 +56,7 @@ def generate_image():
         f.write(base64_decoded)
 
     if task == "gen-image":
-        SKETCH_TO_IMAGE.evaluate(image_path=image_path, output_image_path=output_image_path)
+        INFERENCE.sketch_to_image(sketch_path=image_path, output_path=output_image_path)
         core.resize_to_256(output_image_path)
         with open(output_image_path, "rb") as f:
             b64_encoded = base64.b64encode(f.read())
@@ -107,9 +65,9 @@ def generate_image():
             "ContentType": "application/json"}
     else:
         if task == "gen-sheet-e1":
-            create_sheet(input_image=image_path, output_image=output_image_path)
+            INFERENCE.create_sheet_e1(input_image=image_path, output_image=output_image_path)
         else:  # gen-sheet-e2
-            create_sheet_e2(input_image=image_path, output_image=output_image_path)
+            INFERENCE.create_sheet_e2(input_image=image_path, output_image=output_image_path)
         with open(output_image_path, "rb") as f:
             b64_encoded = base64.b64encode(f.read())
         b64_encoded = DATA_IMAGE_HEADER + b64_encoded.decode("utf-8")
@@ -125,7 +83,7 @@ def root():
 if __name__ == "__main__":
     app.run(debug=True)
 
-# File upload/download features are based on following references
+# File upload/download/canvas-sketch features are based on following references
 # https://pythonbasics.org/flask-upload-file/
 # https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
 # https://stackoverflow.com/questions/10906734/how-to-upload-image-into-html5-canvas

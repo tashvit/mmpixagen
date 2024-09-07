@@ -143,7 +143,7 @@ class Model:
 
     def evaluate(self, image_path=None, image=None, output_image_path=None, driver="front") -> Image:
         """
-        Evaluate model on given input
+        Run inference on given input
         :param image_path: Image path to load image from (either this or image need to be provided)
         :param image: 64x64 magenta background image (Pillow) to evaluate
             (either this or image_path need to be provided)
@@ -230,6 +230,16 @@ def get_path(*paths) -> str:
 
 
 def create_sketch(cv_img, levels=3, magenta_bg=True):
+    """
+    Function to create a sketch of an image
+    :param cv_img: opencv image
+    :param levels: number of levels to apply sketching - higher the number, smoother the sketching (less detail)
+    :param magenta_bg: should apply magenta background or not
+    :return: image object
+    Code references:
+    - https://stackabuse.com/opencv-edge-detection-in-python-with-cv2canny/
+    - https://codewithcurious.com/python-projects/convert-image-into-sketch-python/
+    """
     image = cv_img
     # Create a basic sketch
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

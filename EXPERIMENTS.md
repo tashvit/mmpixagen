@@ -15,7 +15,7 @@ python -m thirdparty.pix2pix.train --dataroot ./datasets/model_a_data/combined -
 
 * Generator - 'unet_64' 
 * Discriminator is 1x1 PatchGAN/pixel 
-* Do not resize images to 256x256
+* Does not resize images to 256x256
 
 ```bash
 python -m thirdparty.pix2pix.train --dataroot ./datasets/model_a_data/combined --name pixel_A2 --model pix2pix --direction BtoA --netG unet_64 --netD pixel --load_size 64 --crop_size 64 --display_winsize 64
